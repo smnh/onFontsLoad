@@ -7,9 +7,9 @@ var context = window;
 	 * Supplied font-families should be already defined in the document, by URL or base64.
 	 * If after specific threshold time fonts won't be loaded, callback will be invoked.
 	 * 
-	 * Callback invoked with an object parameter specifying if all fonts were successfully loaded.
-	 * If all fonts were loaded then object with "error: null" will be returned.
-	 * Otherwise, object with message in "error" field and array with all the font-families that weren't loaded in
+	 * Callback invoked with a single parameter specifying if an error occurred and not all fonts were successfully loaded.
+	 * If all fonts were loaded then this parameter will be null.
+	 * Otherwise, object with message in "message" field and array with all the font-families that weren't loaded in
 	 * "notLoadedFontFamilies" field will be returned.
 	 * 
 	 * @param {Array} fontFamiliesArray Array of font-families to test
@@ -99,13 +99,11 @@ var context = window;
 							notLoadedFontFamilies.push(testDiv._ff);
 						}
 						callbackParameter = {
-							error: "Not all fonts are loaded",
+							message: "Not all fonts are loaded",
 							notLoadedFontFamilies: notLoadedFontFamilies
 						};
 					} else {
-						callbackParameter = {
-							error: null
-						};
+						callbackParameter = null;
 					}
 					fontsLoadedCallback(callbackParameter);
 				} else {
@@ -115,9 +113,7 @@ var context = window;
 		} else {
 			// All fonts are loaded
 			testContainer.parentNode.removeChild(testContainer);
-			fontsLoadedCallback({
-				error: null
-			});
+			fontsLoadedCallback(null);
 		}
 	};
 
