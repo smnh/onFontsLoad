@@ -12,7 +12,7 @@ First define some fonts in your page:
 	}
 	.myFont {
 		font-family: DeliciousRoman, Helvetica, Arial, sans-serif;
-		}
+	}
 </style>
 ```
 Then include the onFontsLoad.js
@@ -21,9 +21,12 @@ Then include the onFontsLoad.js
 ```
 And finally, add following function passing it array with all font-families you want to load and a callback function which will be executed once all fonts are loaded:
 ```javascript
-onFontsLoad("DeliciousRoman", function(error) {
+onFontsLoad(["DeliciousRoman"], function(error) {
 	if (!error) {
-		// do something here, for example hide loading indicator and show elements with loaded font-family.
+		// do something here, for example hide loading indicator and show elements with loaded font-families.
+	} else {
+		// error.notLoadedFontFamilies is an array of font-families that didn't loaded in specific time interval.
+		console.log(error.message)
 	}
 });
 ```
