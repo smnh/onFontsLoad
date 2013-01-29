@@ -1,7 +1,11 @@
 var context = window;
 
 (function() {
-
+	
+	var origWidth = null,
+		origHeight = null,
+		testDiv = null;
+	
 	/**
 	 * This function waits until all specified font-families loaded and then executes a callback function.
 	 * Supplied font-families should be already defined in the document, by URL or base64.
@@ -18,15 +22,14 @@ var context = window;
 	 * @return {Object}
 	 */
 	this.onFontsLoad = function onFontsLoad(fontFamiliesArray, fontsLoadedCallback, options) {
-		var testContainer, testDiv, clonedDiv,
+		var testContainer, clonedDiv,
 			notLoadedFontFamilies = [],
 			referenceFontFamily = "serif",
-			origHeight, origWidth,
 			i, interval,
 			callbackParameter,
 			tryCount = 0,
-			maxNumOfTries = 5,
-			tryIntervalMs = 500;
+			maxNumOfTries = 10,
+			tryIntervalMs = 250;
 		
 		function testDivDimensions() {
 			var i, testDiv;
@@ -51,26 +54,28 @@ var context = window;
 		// Use pretty big fonts "40px" so smallest difference between standard
 		// "serif" fonts and tested font-family will be noticable.
 		testContainer = document.createElement("div");
-		testContainer.style.cssText = "position:absolute; left:-1000px; top:-1000px; font-family: " + referenceFontFamily + "; font-size:40px;"; 
+		testContainer.style.cssText = "position:absolute; left:-10000px; top:-10000px; font-family: " + referenceFontFamily + "; font-size:40px;"; 
 		document.body.appendChild(testContainer);
 		
-		testDiv = document.createElement("div");
-		testDiv.appendChild(document.createTextNode("The quick brown fox jumps over the lazy dog"));
+		if (testDiv === null) {
+			testDiv = document.createElement("div");
+			testDiv.style.position = "absolute";
+			testDiv.style.whiteSpace = "nowrap";
+			testDiv.appendChild(document.createTextNode("!\"\\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸƒˆ˜ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρςστυφχψωϑϒϖ–—‘’‚“”„†‡•…‰′″‹›‾⁄€ℑ℘ℜ™ℵ←↑→↓↔↵⇐⇑⇒⇓⇔∀∂∃∅∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫∴∼≅≈≠≡≤≥⊂⊃⊄⊆⊇⊕⊗⊥⋅⌈⌉⌊⌋〈〉◊♠♣♥♦"));
+		}
 		
-		// Get default dimensions
-		clonedDiv = testDiv.cloneNode(true);
-		clonedDiv.style.position = "absolute";
-		clonedDiv.style.whiteSpace = "nowrap";
-		testContainer.appendChild(clonedDiv);
-		origWidth = clonedDiv.offsetWidth;
-		origHeight = clonedDiv.offsetHeight;
-		clonedDiv.parentNode.removeChild(clonedDiv);
+		if (origWidth === null || origHeight === null) {
+			// Get default dimensions
+			clonedDiv = testDiv.cloneNode(true);
+			testContainer.appendChild(clonedDiv);
+			origWidth = clonedDiv.offsetWidth;
+			origHeight = clonedDiv.offsetHeight;
+			clonedDiv.parentNode.removeChild(clonedDiv);
+		}
 		
 		// Add div for each font-family
 		for (i = 0; i < fontFamiliesArray.length; i++) {
 			clonedDiv = testDiv.cloneNode(true);
-			clonedDiv.style.position = "absolute";
-			clonedDiv.style.whiteSpace = "nowrap";
 			testContainer.appendChild(clonedDiv);
 			// Apply tested font-family
 			clonedDiv.style.fontFamily = fontFamiliesArray[i] + ", " + referenceFontFamily;
@@ -85,6 +90,7 @@ var context = window;
 		if (testContainer.childNodes.length) {
 			// Poll div for their dimensions every tryIntervalMs.
 			interval = window.setInterval(function() {
+				var testDiv;
 				// Loop through all divs and check if their dimensions changed.
 				testDivDimensions();
 				// If no divs remained, then all fonts loaded.
