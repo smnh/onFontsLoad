@@ -7,18 +7,17 @@ var context = window;
 		testDiv = null;
 	
 	/**
-	 * This function waits until all specified font-families loaded and then executes a callback function.
-	 * Supplied font-families should be already defined in the document, by URL or base64.
-	 * If after specific threshold time fonts won't be loaded, callback will be invoked.
+	 * This function waits until all specified font-families loaded and rendered and then executes the callback function.
+	 * It doesn't add font-families to the document, all font-families should be added to the document elsewhere.
+	 * If after specific threshold time fonts won't be loaded, the callback function will be invoked with an error.
 	 * 
-	 * Callback invoked with a single parameter specifying if an error occurred and not all fonts were successfully loaded.
-	 * If all fonts were loaded then this parameter will be null.
-	 * Otherwise, object with message in "message" field and array with all the font-families that weren't loaded in
-	 * "notLoadedFontFamilies" field will be returned.
+	 * The callback function is invoked with a single error parameter.
+	 * If all fonts were loaded then this parameter will be null. Otherwise, object with message in the "message" field
+	 * and array in "notLoadedFontFamilies" field with all not loaded font-families will be returned.
 	 * 
-	 * @param {Array} fontFamiliesArray Array of font-families to test
+	 * @param {Array}    fontFamiliesArray   Array of font-families to load
 	 * @param {Function} fontsLoadedCallback Callback function to call after all font-families loaded
-	 * @param {Object} options Optional object with maxNumOfTries and tryIntervalMs properties.
+	 * @param {Object}   [options]           Optional object with "maxNumOfTries" and "tryIntervalMs" properties.
 	 * @return {Object}
 	 */
 	this.onFontsLoad = function onFontsLoad(fontFamiliesArray, fontsLoadedCallback, options) {
@@ -42,6 +41,25 @@ var context = window;
 			}
 		}
 		
+		function finish() {
+			var testDiv;
+			window.clearInterval(interval);
+			testContainer.parentNode.removeChild(testContainer);
+			if (testContainer.childNodes.length !== 0) {
+				for (i = testContainer.childNodes.length - 1; i >= 0; i--) {
+					testDiv = testContainer.childNodes[i];
+					notLoadedFontFamilies.push(testDiv._ff);
+				}
+				callbackParameter = {
+					message: "Not all fonts are loaded",
+					notLoadedFontFamilies: notLoadedFontFamilies
+				};
+			} else {
+				callbackParameter = null;
+			}
+			fontsLoadedCallback(callbackParameter);
+		}
+		
 		if (options !== undefined) {
 			if (options.maxNumOfTries) {
 				maxNumOfTries = options.maxNumOfTries;
@@ -61,16 +79,13 @@ var context = window;
 			testDiv = document.createElement("div");
 			testDiv.style.position = "absolute";
 			testDiv.style.whiteSpace = "nowrap";
-			testDiv.appendChild(document.createTextNode("!\"\\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸƒˆ˜ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρςστυφχψωϑϒϖ–—‘’‚“”„†‡•…‰′″‹›‾⁄€ℑ℘ℜ™ℵ←↑→↓↔↵⇐⇑⇒⇓⇔∀∂∃∅∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫∴∼≅≈≠≡≤≥⊂⊃⊄⊆⊇⊕⊗⊥⋅⌈⌉⌊⌋〈〉◊♠♣♥♦"));
-		}
-		
-		if (origWidth === null || origHeight === null) {
+			testDiv.appendChild(document.createTextNode(" !\"\\#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿŒœŠšŸƒˆ˜ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρςστυφχψωϑϒϖ–—‘’‚“”„†‡•…‰′″‹›‾⁄€ℑ℘ℜ™ℵ←↑→↓↔↵⇐⇑⇒⇓⇔∀∂∃∅∇∈∉∋∏∑−∗√∝∞∠∧∨∩∪∫∴∼≅≈≠≡≤≥⊂⊃⊄⊆⊇⊕⊗⊥⋅⌈⌉⌊⌋〈〉◊♠♣♥♦"));
+			
 			// Get default dimensions
-			clonedDiv = testDiv.cloneNode(true);
-			testContainer.appendChild(clonedDiv);
-			origWidth = clonedDiv.offsetWidth;
-			origHeight = clonedDiv.offsetHeight;
-			clonedDiv.parentNode.removeChild(clonedDiv);
+			testContainer.appendChild(testDiv);
+			origWidth = testDiv.offsetWidth;
+			origHeight = testDiv.offsetHeight;
+			testDiv.parentNode.removeChild(testDiv);
 		}
 		
 		// Add div for each font-family
@@ -90,28 +105,13 @@ var context = window;
 		if (testContainer.childNodes.length) {
 			// Poll div for their dimensions every tryIntervalMs.
 			interval = window.setInterval(function() {
-				var testDiv;
 				// Loop through all divs and check if their dimensions changed.
 				testDivDimensions();
 				// If no divs remained, then all fonts loaded.
 				// We also won't wait too much time, maybe some fonts are broken.
 				if (testContainer.childNodes.length === 0 || tryCount === maxNumOfTries) {
 					// All fonts are loaded OR (maxNumOfTries * tryIntervalMs) ms passed.
-					window.clearInterval(interval);
-					testContainer.parentNode.removeChild(testContainer);
-					if (testContainer.childNodes.length !== 0) {
-						for (i = testContainer.childNodes.length - 1; i >= 0; i--) {
-							testDiv = testContainer.childNodes[i];
-							notLoadedFontFamilies.push(testDiv._ff);
-						}
-						callbackParameter = {
-							message: "Not all fonts are loaded",
-							notLoadedFontFamilies: notLoadedFontFamilies
-						};
-					} else {
-						callbackParameter = null;
-					}
-					fontsLoadedCallback(callbackParameter);
+					finish();
 				} else {
 					tryCount++;
 				}

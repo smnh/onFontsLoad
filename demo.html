@@ -62,17 +62,19 @@
 			}
 		}
 		
-		function fontsLoadedCallback() {
+		function fontsLoadedCallback(error) {
+			console.log(error);
 			loadingElm.style.display = "none";
 			fontsContainerElm.style.display = "block";
 		}
-		
-		addFonts();
 		
 		onFontsLoad(fontFamiliesArray, fontsLoadedCallback, {
 			maxNumOfTries: 8,
 			tryIntervalMs: 500
 		});
+		
+		addFonts();
+		
 	</script>
 </body>
 </html>
