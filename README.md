@@ -1,3 +1,5 @@
+This project is not supported anymore, please refer to [FontLoader](https://github.com/smnh/FontLoader).
+
 #onFontsLoad
 Javascript utility function that notifies when specific font families are loaded and rendered. It can be useful when you want to show alternative content before specific fonts are loaded. Оr when you need to get final dimensions of non-size-fixed containers that contain font families, as dimension of these containers may change after fonts are loaded.
 
